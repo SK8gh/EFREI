@@ -1,9 +1,13 @@
 #!/usr/bin/python3
 
+"""
+    Implements the data acquisition part of the project
+"""
+
+from datetime import datetime
 from binance import Client
 import pandas as pd
 import logging
-import ast
 
 # Project configuration
 import configuration as conf
@@ -59,7 +63,7 @@ class BinanceWrapper:
 
         except Exception as e:
             logging.error(f"An error happened when requesting historical klines for ticker: {symbol}")
-            return None
+            raise e
 
         # Creating a dataframe with the API response
         data = pd.DataFrame(columns=conf.RESPONSE_COLUMNS, data=klines)
@@ -75,6 +79,12 @@ class BinanceWrapper:
         """
         if interval not in conf.VALID_INTERVALS:
             raise ValueError(f"Interval argument must be in {conf.VALID_INTERVALS}")
+
+        for d in (start_time, end_time):
+            try:
+                datetime.strptime(d, "%Y-%m-%d")
+            except ValueError:
+                raise ValueError(f"Start and end time must have appropriate format: yyyy-mm-dd")
 
         # Initializing returned object
         data_d = {s: None for s in symbols}
