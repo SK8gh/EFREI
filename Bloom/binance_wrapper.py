@@ -4,6 +4,7 @@
     Implements the data acquisition part of the project
 """
 
+from analytics import Analytics
 from datetime import datetime
 from binance import Client
 import pandas as pd
@@ -54,6 +55,8 @@ class BinanceWrapper:
         """
         Getting historical prices for given tickers, number of days, interval. Returns a pandas dataframe
         """
+        logging.info(f"Requesting data for symbol: {symbol}")
+
         try:
             # Sending request
             klines = self.client.get_historical_klines(symbol=symbol,
@@ -70,6 +73,9 @@ class BinanceWrapper:
 
         for c in ['OPEN_TIMESTAMP', 'CLOSE_TIMESTAMP']:
             data[c] = self.convert_timestamp(data[c])
+
+        for c in ['OPEN', 'HIGH', 'LOW', 'CLOSE', 'VOLUME']:
+            data[c] = data[c].astype(float)
 
         return data
 
@@ -105,4 +111,13 @@ if __name__ == '__main__':
                                      start_time='2025-08-08',
                                      end_time='2025-08-09',
                                      interval='1h')
-    print(data)
+
+    bitcoin_df = data['BTCUSDT']
+
+    Analytics.moving_average(df=bitcoin_df, column='CLOSE', window=3)
+
+    Analytics.exponential_ma(df=bitcoin_df, column='CLOSE', window=3)
+
+    Analytics.bollinger_bands(df=bitcoin_df, column='CLOSE', window=3)
+
+    print('ok')
