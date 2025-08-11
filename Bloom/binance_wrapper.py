@@ -26,10 +26,8 @@ class BinanceWrapper:
         # Convert milliseconds to seconds
         timestamp_sec = timestamp_ms / 1000
 
-        # Convert to Pandas Timestamp
-        timestamp_pd = pd.to_datetime(timestamp_sec, unit='s')
-
-        return timestamp_pd
+        # Converting to Pandas Timestamp
+        return pd.to_datetime(timestamp_sec, unit='s')
 
     def get_symbols(self):
         """
@@ -48,7 +46,7 @@ class BinanceWrapper:
 
         return tickers_usdt
 
-    def get_ticker_data(self, symbol, start_time, end_time, interval):
+    def get_ticker_data(self, symbol: str, start_time: str, end_time: str, interval: str):
         """
         Getting historical prices for given tickers, number of days, interval. Returns a pandas dataframe
         """
@@ -60,8 +58,8 @@ class BinanceWrapper:
                                                        end_str=end_time)
 
         except Exception as e:
-            logging.error(f"An error happened when requesting historical klines")
-            raise e
+            logging.error(f"An error happened when requesting historical klines for ticker: {symbol}")
+            return None
 
         # Creating a dataframe with the API response
         data = pd.DataFrame(columns=conf.RESPONSE_COLUMNS, data=klines)
@@ -71,25 +69,15 @@ class BinanceWrapper:
 
         return data
 
-    def get_data(self, symbols, start_time, end_time, interval, gateway=False):
+    def get_data(self, symbols: list, start_time: str, end_time: str, interval: str):
         """
-        Requests products (one at a time)
+        Performs Binance API requests for input products on required time period with a given interval
         """
-        if gateway:
-            try:
-                symbols = ast.literal_eval(symbols)
-            except Exception as e:
-                msg = f"Could not convert the inputted symbols into a list (gateway call)"
-                logging.error(msg)
-                raise ValueError(f"{msg}: {str(e)}")
-
-        if not isinstance(symbols, list):
-            raise TypeError(f"'symbols argument must be a list but has type : {type(symbols)}'")
-        elif interval not in conf.VALID_INTERVALS:
+        if interval not in conf.VALID_INTERVALS:
             raise ValueError(f"Interval argument must be in {conf.VALID_INTERVALS}")
 
         # Initializing returned object
-        data = {s: None for s in symbols}
+        data_d = {s: None for s in symbols}
 
         for s in symbols:
             df = self.get_ticker_data(symbol=s,
@@ -97,12 +85,14 @@ class BinanceWrapper:
                                       end_time=end_time,
                                       interval=interval)
 
-            data[s] = df
+            data_d[s] = df
 
-        return data
+        return data_d
 
 
 if __name__ == '__main__':
-    binance_client = Client("API_KEY", "API_SECRET")
-    price = binance_client.get_symbol_ticker(symbol="BTCUSDT")
-    print(price)
+    data = BinanceWrapper().get_data(symbols=['BTCUSDT'],
+                                     start_time='2025-08-08',
+                                     end_time='2025-08-09',
+                                     interval='1h')
+    print(data)
