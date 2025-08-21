@@ -1,0 +1,64 @@
+:: ============================
+:: Windows version (deploy_env.bat)
+:: ============================
+@echo off
+REM Delete existing virtual environment if it exists
+IF EXIST BloomEnv (
+    echo Deleting existing virtual environment...
+    rmdir /s /q BloomEnv
+)
+
+REM Create new virtual environment
+echo Creating new virtual environment...
+python -m venv BloomEnv
+
+REM Activate the virtual environment
+call BloomEnv\Scripts\activate.bat
+
+REM Upgrade pip
+echo Upgrading pip...
+python -m pip install --upgrade pip
+
+REM Install requirements
+IF EXIST requirements.txt (
+    echo Installing packages from requirements.txt...
+    pip install -r requirements.txt
+) ELSE (
+    echo requirements.txt not found!
+)
+
+echo Deployment complete.
+pause
+
+
+:: ============================
+:: macOS/Linux version (deploy_env.sh)
+:: ============================
+# !/bin/bash
+
+# Delete existing virtual environment if it exists
+if [ -d "BloomEnv" ]; then
+    echo "Deleting existing virtual environment..."
+    rm -rf BloomEnv
+fi
+
+# Create new virtual environment
+echo "Creating new virtual environment..."
+python3 -m venv BloomEnv
+
+# Activate the virtual environment
+source BloomEnv/bin/activate
+
+# Upgrade pip
+echo "Upgrading pip..."
+python3 -m pip install --upgrade pip
+
+# Install requirements
+if [ -f "requirements.txt" ]; then
+    echo "Installing packages from requirements.txt..."
+    pip install -r requirements.txt
+else
+    echo "requirements.txt not found!"
+fi
+
+echo "Deployment complete."
