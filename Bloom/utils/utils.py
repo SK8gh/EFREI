@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 
-import configuration as conf
+from functools import wraps
 import argparse
 import logging
+import time
 
 
 # Storing run/debug configuration argument names
@@ -23,13 +24,10 @@ def parse_arguments():
 
     arguments = parser.parse_args()
 
-    # Defaulting logging level to 'INFO'
-    arguments.log = arguments.log if arguments.log else conf.DEFAULT_LOGGING_LEVEL
-
     # Setting logging level
     logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S',
-                        level=arguments.log)
+                        level='INFO')
 
     logging.info(f"Parsed arguments:")
     for arg_name, arg_value in sorted(vars(arguments).items()):
@@ -40,3 +38,20 @@ def parse_arguments():
         logging.info(f"{arg_name}: {arg_value}")
 
     return arguments
+
+
+def timing(func):
+    """
+    Decorator that measures the execution time of a function.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()  # high-resolution timer
+
+        result = func(*args, **kwargs)
+
+        end = time.perf_counter()
+        print(f"'{func.__name__}' executed in {end - start:.2f} seconds")
+
+        return result
+    return wrapper

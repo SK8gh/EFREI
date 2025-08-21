@@ -4,14 +4,15 @@
     Implements the data acquisition part of the project
 """
 
-from analytics import Analytics
+from analytics_py import Analytics
+import matplotlib.pyplot as plt
 from datetime import datetime
 from binance import Client
 import pandas as pd
 import logging
 
 # Project configuration
-import configuration as conf
+import configuration_py as conf
 
 
 class BinanceWrapper:
@@ -101,23 +102,47 @@ class BinanceWrapper:
                                       end_time=end_time,
                                       interval=interval)
 
+            # Dropping useless columns
+            df.drop(columns=conf.IGNORE_COLUMNS, errors="ignore", inplace=True)
+
             data_d[s] = df
 
         return data_d
 
 
+def correlation_matrix(data: dict, column: str):
+    """
+    Computing the correlations of products based on a certain column
+    """
+    # Extract closing prices into a single DataFrame
+    values = {}
+
+    for symbol, df in data.items():
+        values[symbol] = df[column]
+
+    prices = pd.concat(
+        values,
+        axis=1
+    )
+
+    # Compute returns
+    returns = prices.dropna(axis=1).pct_change().dropna()
+
+    # Correlation matrix
+    corr = returns.corr()
+
+    return corr
+
+
 if __name__ == '__main__':
-    data = BinanceWrapper().get_data(symbols=['BTCUSDT'],
+    symbols = ['BTCUSDT', 'ETHUSDT', 'ADAUSDT']
+    symbols = ('BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'NEOUSDT', 'LTCUSDT', 'QTUMUSDT', 'ADAUSDT', 'XRPUSDT')
+
+    data = BinanceWrapper().get_data(symbols=symbols,
                                      start_time='2025-08-08',
                                      end_time='2025-08-09',
                                      interval='1h')
 
-    bitcoin_df = data['BTCUSDT']
-
-    Analytics.moving_average(df=bitcoin_df, column='CLOSE', window=3)
-
-    Analytics.exponential_ma(df=bitcoin_df, column='CLOSE', window=3)
-
-    Analytics.bollinger_bands(df=bitcoin_df, column='CLOSE', window=3)
+    corr = correlation_matrix(data=data, column='CLOSE')
 
     print('ok')
