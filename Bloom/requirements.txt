@@ -1,5 +1,5 @@
 streamlit>=1.0
-numpy<2.0
+numpy>=2.0
 pandas>=1.5.0
 pyarrow>=10.0.1
 numexpr>=2.8.0
